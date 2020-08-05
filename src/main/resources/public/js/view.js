@@ -9,8 +9,8 @@ class View {
         this.$todoItemCounter = document.querySelector('.todo-count');
         this.$clearCompleted = document.querySelector('.clear-completed');
         this.$main = document.querySelector('.main');
-        this.$toggleAll = document.querySelector('.toggle-all');
-        this.$newTodo = document.querySelector('.new-todo');
+        this.$toggleAll = document.querySelector('#toggle-all');
+        this.$newTodo = document.querySelector('#new-todo');
         View.delegate(this.$todoList, 'li label', 'dblclick', ({target}) => {
             this.editItem(target);
         });
