@@ -45,28 +45,32 @@ class Controller {
      */
     sendAjax(endpoint, method, params = null, onSuccess = null) {
         const scope = this;
-        const req = new XMLHttpRequest();
-        req.addEventListener("load", function (event) {
-            onSuccess.call(scope, event);
-        });
-        req.addEventListener("error", function (err) {
-            console.log("Request failed for " + endpoint + " error: " + err);
-        });
-        req.open(method, endpoint);
+        const requestOptions = {method: method, body: params};
         if (method === Controller.POST || method === Controller.PUT) {
-            req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            requestOptions.headers = {"Content-type": "application/x-www-form-urlencoded"};
         }
-        req.send(params);
+        fetch(endpoint, requestOptions)
+            .then(response => {
+                if (response.status !== 200) {
+                    console.log("Request failed for " + endpoint + " error: " + response.error() + " HTTP status:" + response.status);
+                    return;
+                }
+                // Read the response
+                response.text().then(data => onSuccess.call(scope, data));
+            })
+            .catch(function(err) {
+                console.log("Request failed for " + endpoint + " error: " + err);
+            });
     }
 
     /**
      * Add an item and display it in the list.
      */
     addItem(title) {
-        this.sendAjax("addTodo", Controller.POST, "todo-title=" + title, function (event) {
+        this.sendAjax("addTodo", Controller.POST, "todo-title=" + title, function (data) {
             this.view.clearNewTodo();
             this._refresh(true);
-            this._checkResponse(event.target.response, "addTodo");
+            this._checkResponse(data, "addTodo");
         });
     }
 
@@ -75,9 +79,9 @@ class Controller {
      */
     editItemSave(id, title) {
         if (title.length) {
-            this.sendAjax("todos/" + id, Controller.PUT, "todo-title=" + title, function (event) {
+            this.sendAjax("todos/" + id, Controller.PUT, "todo-title=" + title, function (data) {
                 this.view.editItemDone(id, title);
-                this._checkResponse(event.target.response, "todos/" + id);
+                this._checkResponse(data, "todos/" + id);
             });
         } else {
             this.removeItem(id);
@@ -88,8 +92,8 @@ class Controller {
      * Cancel the item editing mode.
      */
     editItemCancel(id) {
-        this.sendAjax("todos/" + id, Controller.GET, null, function (event) {
-            this.view.editItemDone(id, event.target.response);
+        this.sendAjax("todos/" + id, Controller.GET, null, function (data) {
+            this.view.editItemDone(id, data);
         });
     }
 
@@ -97,9 +101,9 @@ class Controller {
      * Remove the data and elements related to an Item.
      */
     removeItem(id) {
-        this.sendAjax("todos/" + id, Controller.DELETE, null, function (event) {
+        this.sendAjax("todos/" + id, Controller.DELETE, null, function (data) {
             this.view.removeItem(id);
-            this._checkResponse(event.target.response, "todos/" + id);
+            this._checkResponse(data, "todos/" + id);
 
         });
     }
@@ -108,9 +112,9 @@ class Controller {
      * Remove all completed items.
      */
     removeCompletedItems() {
-        this.sendAjax("todos/completed", Controller.DELETE, null, function (event) {
+        this.sendAjax("todos/completed", Controller.DELETE, null, function (data) {
             this._refresh(true);
-            this._checkResponse(event.target.response, "todos/completed");
+            this._checkResponse(data, "todos/completed");
         });
     }
 
@@ -118,9 +122,9 @@ class Controller {
      * Update an item in based on the state of completed.
      */
     toggleCompleted(id, completed) {
-        this.sendAjax("todos/" + id + "/toggle_status", Controller.PUT, "status=" + completed, function (event) {
+        this.sendAjax("todos/" + id + "/toggle_status", Controller.PUT, "status=" + completed, function (data) {
             this._refresh(true);
-            this._checkResponse(event.target.response, "todos/" + id + "/toggle_status");
+            this._checkResponse(data, "todos/" + id + "/toggle_status");
         });
     }
 
@@ -128,9 +132,9 @@ class Controller {
      * Set all items to complete or active.
      */
     toggleAll(completed) {
-        this.sendAjax("todos/toggle_all", Controller.PUT, "toggle-all=" + completed, function (event) {
+        this.sendAjax("todos/toggle_all", Controller.PUT, "toggle-all=" + completed, function (data) {
             this._refresh(true);
-            this._checkResponse(event.target.response, "todos/toggle_all");
+            this._checkResponse(data, "todos/toggle_all");
         });
     }
 
@@ -142,8 +146,8 @@ class Controller {
 
         if (force || this._lastActiveState !== '' || this._lastActiveState !== state) {
             // an item looks like: {id:abc, title:"something", completed:true}
-            this.sendAjax("list", Controller.POST, "status=" + state, function (event) {
-                const respObj = JSON.parse(event.target.response);
+            this.sendAjax("list", Controller.POST, "status=" + state, function (data) {
+                const respObj = JSON.parse(data);
 
                 this.view.showItems(respObj);
 
