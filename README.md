@@ -1,1 +1,1 @@
-# Java SE: Spark to Spring
+# TODOMVC in vanilla JS and Spark
