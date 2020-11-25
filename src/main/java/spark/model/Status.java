@@ -1,4 +1,4 @@
-package model;
+package spark.model;
 
 public enum Status {
     ACTIVE,
