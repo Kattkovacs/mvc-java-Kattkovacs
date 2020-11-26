@@ -34,7 +34,7 @@ public class ToDoJPA implements ToDoDao {
 
     @Override
     public void remove(Long id) {
-        all().remove(repository.findToDoById(id));
+        repository.delete(repository.findToDoById(id));
     }
 
     @Override
@@ -44,7 +44,7 @@ public class ToDoJPA implements ToDoDao {
 
     @Override
     public void update(Long id, String title) {
-        repository.findToDoById(id).setTitle(title);
+        repository.updateTitle(id, title);
     }
 
     @Override
@@ -54,27 +54,22 @@ public class ToDoJPA implements ToDoDao {
 
     @Override
     public List<ToDo> ofStatus(Status status) {
-        return all().stream().filter(t -> t.getStatus().equals(status)).collect(Collectors.toList());
+        return repository.findByStatusIs(status);
     }
 
     @Override
     public void removeCompleted() {
-        ofStatus(Status.COMPLETE).forEach(t -> all().remove(t.getId()));
+        repository.removeToDoByStatusIs(Status.COMPLETE);
     }
 
     @Override
     public void toggleStatus(Long id, boolean isComplete) {
-        ToDo todo = repository.findToDoById(id);
-        if (isComplete) {
-            todo.setStatus(Status.COMPLETE);
-        } else {
-            todo.setStatus(Status.ACTIVE);
-        }
+        repository.updateStatus(id, isComplete ? Status.COMPLETE : Status.ACTIVE);
     }
 
     @Override
     public void toggleAll(boolean complete) {
-        all().forEach(t -> t.setStatus(complete ? Status.COMPLETE : Status.ACTIVE));
+        repository.updateAllStatuses(complete ? Status.COMPLETE : Status.ACTIVE);
     }
 
 }

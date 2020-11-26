@@ -7,10 +7,7 @@ import lombok.NoArgsConstructor;
 import spring.dao.Status;
 
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Data
 @NoArgsConstructor
@@ -25,5 +22,12 @@ public class ToDo {
     @GeneratedValue
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     private Status status;
+
+    public static ToDo create(String title){
+        return ToDo.builder().title(title).status(Status.ACTIVE).build();
+    }
+
+    public boolean isCompleted() { return this.status == Status.COMPLETE;}
 }
